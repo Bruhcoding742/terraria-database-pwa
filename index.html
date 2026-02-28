@@ -1,0 +1,125 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terraria Offline App</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f380f">
+
+<style>
+body {
+  margin:0;
+  font-family: system-ui, sans-serif;
+  background: linear-gradient(#0f380f, #1a1a1a);
+  color:white;
+  padding:20px;
+}
+
+h1 { margin-top:0; }
+
+input, select, button {
+  padding:12px;
+  margin-bottom:12px;
+  border-radius:8px;
+  border:none;
+  width:100%;
+  font-size:16px;
+}
+
+button {
+  background:#16a085;
+  color:white;
+}
+
+.result {
+  background:#1e1e1e;
+  padding:12px;
+  margin-bottom:10px;
+  border-radius:10px;
+}
+
+.type {
+  font-size:12px;
+  color:#2ecc71;
+  text-transform:uppercase;
+}
+
+.desc {
+  opacity:0.9;
+  font-size:14px;
+}
+
+footer {
+  margin-top:30px;
+  font-size:12px;
+  opacity:0.6;
+}
+</style>
+</head>
+<body>
+
+<h1>Terraria Database</h1>
+
+<input id="search" placeholder="Search everything...">
+<select id="typeFilter">
+  <option value="all">All Types</option>
+  <option value="item">Items</option>
+  <option value="npc">NPCs</option>
+  <option value="enemy">Enemies</option>
+  <option value="boss">Bosses</option>
+  <option value="biome">Biomes</option>
+</select>
+
+<button onclick="updateData()">Check for Updates</button>
+
+<div id="results"></div>
+
+<footer>
+Offline PWA Mode Enabled
+</footer>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js');
+}
+
+let cachedData = [];
+
+fetch("terraria-data.json")
+  .then(res => res.json())
+  .then(data => {
+    cachedData = data;
+    render();
+  });
+
+function render() {
+  const query = document.getElementById("search").value.toLowerCase();
+  const type = document.getElementById("typeFilter").value;
+  const results = document.getElementById("results");
+
+  const filtered = cachedData.filter(entry => {
+    const matchName = entry.name.toLowerCase().includes(query);
+    const matchType = type === "all" || entry.type === type;
+    return matchName && matchType;
+  }).slice(0, 300);
+
+  results.innerHTML = filtered.map(e => `
+    <div class="result">
+      <div class="type">${e.type}</div>
+      <strong>${e.name}</strong>
+      <div class="desc">${e.description}</div>
+    </div>
+  `).join("");
+}
+
+document.getElementById("search").addEventListener("input", render);
+document.getElementById("typeFilter").addEventListener("change", render);
+
+function updateData() {
+  alert("If connected to internet, reload the page to refresh data cache.");
+}
+</script>
+
+</body>
+</html>
